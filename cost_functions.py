@@ -26,8 +26,8 @@ class MeanSquaredError(CostFunction):
 
     def __call__(self, predictions, labels):
         """ Computes the mean cost. """
-        m = len(predictions)
-        return np.sum( (labels.T - predictions) ** 2 ) / (2 * m)
+        m = len(labels)
+        return np.sum((labels - predictions.T) ** 2) / (2 * m)
 
     def unit(self, prediction, label, derivative=False):
         """ Computes the total cost. """

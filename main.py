@@ -19,8 +19,9 @@ import pygame
 ############### CONFIG ###############
 TEST_SET_PC = 0.2                    # percentage of the data to be used to test the model
 HIDDEN_LAYERS = [64, 64]             # hidden layers architecture
-TRAINING_EPOCHS = 100                # number of training iterations
+TRAINING_EPOCHS = 50                 # number of training iterations
 LEARNING_RATE = 3                    # the model's learning rate
+MOMENTUM_TERM = 0.32                 # value of the momentum term (used to speed up SGD)
 ######################################
 
 
@@ -112,7 +113,8 @@ if __name__ == "__main__":
         epochs=TRAINING_EPOCHS,
         learning_rate=LEARNING_RATE,
         batch_size=32,
-        gradient_checking=False
+        gradient_checking=False,
+        momentum_term=MOMENTUM_TERM,
     )
 
     print("\nAccuracy (training set): %.2f%%" % (100*accuracy(mlp.predict(X_train), Y_train)))

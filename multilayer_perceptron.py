@@ -130,7 +130,7 @@ class MultilayerPerceptron:
                    Y[ indices[i:(i + size)] ] )
                  for i in range(0, len(X), size) ]
 
-    def _sgd(self, data, labels, cost, epochs, lr, batch_size, gradient_checking):
+    def _sgd(self, data, labels, cost, epochs, lr, batch_size, gradient_checking, mt):
         """ Runs the stochastic gradient descent optimization algorithm on the given data.
         
         :param data: matrix with the training samples.
@@ -139,8 +139,10 @@ class MultilayerPerceptron:
         :param epochs: number of training epochs.
         :param lr: learning rate.
         :param batch_size: number of samples in the mini-batches.
+        :param mt: momentum term.
         """""
-        print("Initial cost: %.2f\n" % cost(self.predict(data), labels))
+        print("Initial cost: %.5f\n" % cost(self.predict(data), labels))
+        last_deltaW = [None] * len(self._layers)    # stores the last changes made to the weights
         for e in range(epochs):
             batches = self._make_batches(data, labels, batch_size)
 
@@ -161,12 +163,15 @@ class MultilayerPerceptron:
                 # updating weights
                 for l in range(len(self._layers)):
                     layer = self._layers[l]
-                    layer.weights -= lr * dW[l]
+                    deltaW = -lr * dW[l] + (0 if last_deltaW[l] is None else mt*last_deltaW[l])
+                    last_deltaW[l] = deltaW
+
+                    layer.weights += deltaW
                     layer.bias -= lr * db[l]
 
-            print("[Epoch %d/%d] Cost: %.2f" % (e+1, epochs, cost(self.predict(data), labels)))
+            print("[Epoch %d/%d] Cost: %.5f" % (e+1, epochs, cost(self.predict(data), labels)))
 
-    def fit(self, data, labels, cost_function, epochs, learning_rate, batch_size=32, gradient_checking=False):
+    def fit(self, data, labels, cost_function, epochs, learning_rate, batch_size=32, gradient_checking=False, momentum_term=0):
         """ Fits the model to the given data.
 
         :param data: numpy 2D-array in which each ROW represents an input sample vector.
@@ -177,6 +182,7 @@ class MultilayerPerceptron:
         :param batch_size: number of samples in each training batch.
         :param gradient_checking: if True, the derivatives of the cost function will also be calculated numerically, in
         order to compare them with the ones obtained through backpropagation; used for tests only.
+        :param momentum_term: value for the momentum term (used to speed up the SGD convergence).
         """
         self._sgd(
             data, labels,
@@ -184,7 +190,8 @@ class MultilayerPerceptron:
             epochs=epochs,
             lr=learning_rate,
             batch_size=batch_size,
-            gradient_checking=gradient_checking
+            gradient_checking=gradient_checking,
+            mt=momentum_term
         )
 
     def _numerical_gradient(self, X, Y, cost):
